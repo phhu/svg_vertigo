@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="text/javascript" src="d3.v3.min.js"></script>
+<style>
+
+svg {
+	border:black 1px solid
+}
+line.dline {
+	stroke-width: 2;
+	stroke: black;
+}
+polygon.dpg {
+	stroke-width: 1;
+	stroke: black;
+	fill:solid;
+}
+polygon {
+	stroke:black;xfill:black;
+}
+
+g#pg1 {
+	mask: url(#mask1);
+	/*fill:red;stroke:red;*/
+}
+g#pg2 {
+	mask: url(#mask2);
+	/*fill:blue;stroke:blue;*/
+}
+g#pg3 {
+	mask: url(#mask2);
+	/*fill:green;stroke:green;*/
+}
+g#pg4 {
+	mask: url(#mask1);
+	/*fill:yellow;stroke:yellow;*/
+}
+
+rect.mask {
+	 stroke:white;
+	 /*stroke-width:50;*/
+	 fill:none;
+}
+
+</style>
+
+<script>
+
+	
+	var  h=800, w=h, ox = h/2, oy=w/2, lineLength = h/1.41, triangleWidth = 19;
+	var svg,pg1,pg2;
+	
+	function doChart(){
+		svg = d3.select('#chart');
+		pg1 = d3.select('#pg1');
+		pg2 = d3.select('#pg2');
+		svg.attr({
+			'height':h,
+			'width':w
+		});
+
+
+		var mask1 = svg.select('defs').append('mask').attr({'id':'mask1','x':0,'y':0,'width':w,'height':h});
+		var mask2 = svg.select('defs').append('mask').attr({'id':'mask2','x':0,'y':0,'width':w,'height':h});
+		var rectcount=6, offset = h/rectcount/2;
+		drawRect({
+			//'base':d3.select('#test'),
+			'base':d3.select('#mask1'),
+			'count':rectcount,
+			'offset':offset / -2,
+			//'stroke-width':5,
+			//'class':'mask',
+			'width':h
+		});
+		drawRect({
+			//'base':d3.select('#test'),
+			'base':d3.select('#mask2'),
+			'count':rectcount,
+			'offset':offset *-1.5,
+			//'stroke-width':5,
+			//'class':'mask',
+			'width':h
+		});
+
+		drawPolygons(pg1,360/4,0,'dpg');
+		drawPolygons(d3.select('#pg2'),360/4.5,0,'dpg');
+		drawPolygons(d3.select('#pg3'),360/4.5, 2,'dpg');
+		drawPolygons(d3.select('#pg4'),360/4,2,'dpg');		
+		
+		//start the animation
+		rotateRepeat();		
+		//console.log('test');			
+	}
+	
+	function rotateRepeat() {
+		var rcx = ox, rcy = oy, a = 8,d=1200;
+		d3.select("#pa")
+		.attr("transform","rotate(-" + a +","+ rcx+","+ rcy+")")
+		.transition()
+		.attr("transform","rotate(" + a +","+ rcx+","+ rcy+")")
+		.ease('linear')
+		.duration(d)
+		.transition()
+		.attr("transform","rotate(-" + a +","+ rcx+","+ rcy+")")
+		.ease('linear')
+		.duration(d)
+		.each("end",rotateRepeat)
+		;
+	}
+	
+	function drawRect(spec){
+		
+		//set defaults
+		spec.ox = spec.ox || ox;
+		spec.oy = spec.oy || oy;
+		spec.width = spec.width || 200;
+		spec.height = spec.height || spec.width;
+		spec.offset = spec.offset || 0;
+		spec.count = spec.count || 2;
+		spec['stroke-width'] = spec['stroke-width'] || (spec.width / spec.count / 4);
+		spec['class'] = spec['class'] || 'mask';
+		
+		var x = spec.ox - (spec.width / 2);
+		var y = spec.oy - (spec.height / 2);
+		
+		spec.base.selectAll('rect')
+			.data(d3.range(1,spec.count+1))
+			.enter()
+			.append("rect")
+			.classed(spec['class'], true)
+			.attr({
+				'x':		function(d){return spec.ox - ((spec.width * d / spec.count)+spec.offset)/2;},
+				'y':		function(d){return spec.oy - ((spec.height * d / spec.count)+spec.offset)/2;},
+				'height':	function(d){return (spec.height * d / spec.count) + spec.offset;},
+				'width': 	function(d){return (spec.width * d / spec.count) + spec.offset;},
+				'stroke-width':spec['stroke-width']
+			})
+			//.attr("class","dpg")
+			//.attr('transform',function(d,i){return 'rotate(' + ((360 * d/spec.count) + offset) + ',' + ox + ',' + oy + ')';})
+			;	
+	}
+	
+	function drawPolygons(base,count,offset,classed){
+		base.selectAll("polygon")
+			.data(d3.range(0,count))
+			.enter()
+			.append("polygon")
+			.classed(classed, true)
+			.attr('points',function(d,i){
+				return "" + ox + "," + oy + " " 
+						  + ox + "," + (oy-lineLength) + " "
+						  + (ox+triangleWidth) + "," + (oy-lineLength);
+				})
+			//.attr("class","dpg")
+			.attr('transform',function(d,i){return 'rotate(' + ((360 * d/count) + offset) + ',' + ox + ',' + oy + ')';})
+			;	
+	}
+	
+	
+</script>
+		
+</head>
+	
+<body onload="doChart();">
+	<!--<input type="button" onclick="rotateRepeat();" value="rotate" />-->
+	<br />
+	<svg id="chart">
+		<defs></defs>
+		<g id="pa">
+			<g id="pg1"></g>
+			<g id="pg2"></g>
+		</g>
+		<g id="pb">
+			<g id="pg3"></g>
+			<g id="pg4"></g>
+		</g>
+		<g id="test"></g>
+	</svg>
+	<!--<br />
+	<svg height="500" width="500">
+		<defs>
+		  <mask id="maskx1" x="0" y="0" width="100" height="100" >
+			<rect x="0" y="0" width="100" height="40"	style="stroke:none; fill: #ffffff"/>
+			<rect x="0" y="50" width="100" height="20"	style="stroke:none; fill: #ffffff"/>
+		  </mask>
+		</defs>
+
+		<rect x="1" y="1" width="100" height="100" style="stroke: none; fill: #0000ff; mask: url(#maskx1)"/>
+	</svg>-->
+
+</body>
+
+<!--
+		/*svg.selectAll("line")
+			.data([1,2,3,4])
+			.enter()
+			.append("line")
+			.attr({'x1': ox,
+					'y1':oy,
+					'x2':ox,
+					'y2':0,
+					'transform':function(d,i){return 'rotate(' + (+d * 10) + ',' + ox + ',' + oy + ')';}
+				})
+			//function(d,i){console.log('test');return d*100;}
+			//function(d,i){return d*10;}
+			.attr("class","dline")
+			;*/
+-->
+
+</html>
